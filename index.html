@@ -1,0 +1,73 @@
+<div class="slider-btn mt-30 mb-30">
+  <form id="converter-form" onsubmit="return false;">
+    <label for="file-input">Choose a file:</label>
+    <input
+      type="file"
+      id="file-input"
+      name="file-input"
+      accept=".csv, .xls, .xlsx"
+      onchange="handleFileUpload(event)"
+    />
+    <button id="convert-btn" type="submit">Convert to JSON</button>
+  </form>
+  <div id="loader" style="display: none;">
+    <img src="loader.gif" alt="Loading..." />
+  </div>
+  <div id="result" style="display: none;">
+    <p>File converted successfully!</p>
+    <p id="download-link"></p>
+    <button id="convert-more-btn">Convert More</button>
+  </div>
+</div>
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  const extension = file.name.split('.').pop().toLowerCase();
+  const resultDiv = document.querySelector("#result");
+  const loader = document.querySelector("#loader");
+
+  if (extension === 'csv') {
+    loader.style.display = "block";
+    resultDiv.style.display = "none";
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const csv = e.target.result;
+      const json = csvToJson(csv);
+
+      const jsonData = JSON.stringify(json);
+      const downloadLink = generateDownloadLink(jsonData, file.name);
+
+      resultDiv.innerHTML = `
+        <p>File converted successfully!</p>
+        <p>Download link: <a href="${downloadLink}" download="${file.name}.json">Download</a></p>
+      `;
+      loader.style.display = "none";
+      resultDiv.style.display = "block";
+      document.getElementById("file-input").value = "";
+    };
+    reader.readAsText(file);
+  } else if (extension === 'xlsx') {
+    loader.style.display = "block";
+    resultDiv.style.display = "none";
+
+    excelToJson(file);
+  } else {
+    alert('Invalid file type. Only CSV and Excel files are allowed.');
+  }
+}
